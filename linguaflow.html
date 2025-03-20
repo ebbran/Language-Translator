@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinguaFlow - Smart Translator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6C63FF;
+            --secondary: #FF6584;
+            --gradient: linear-gradient(135deg, var(--primary), var(--secondary));
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--gradient);
+            margin: 0;
+            min-height: 100vh; /* Ensures it expands beyond viewport if needed */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow-x: hidden; /* Keep horizontal scrolling disabled */
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+            position: relative;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.3);
+            transition: transform 0.3s ease;
+            overflow: hidden; 
+        }
+
+
+        .container:hover {
+            transform: translateY(-5px);
+        }
+
+        h1 {
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .input-group {
+            position: relative;
+            margin: 20px 0;
+        }
+
+        input, select, button {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 10px rgba(108, 99, 255, 0.2);
+        }
+
+        button {
+            background: var(--gradient);
+            color: white;
+            cursor: pointer;
+            border: none;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(108, 99, 255, 0.3);
+        }
+
+        .voice-animation {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+            pointer-events: none;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(108, 99, 255, 0.5); }
+            100% { box-shadow: 0 0 0 20px rgba(108, 99, 255, 0); }
+        }
+
+        .result-box {
+            background: rgba(108, 99, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 20px 0;
+            min-height: 80px;
+            transition: all 0.3s ease;
+        }
+
+        .history {
+            text-align: left;
+            margin-top: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .history li {
+            padding: 10px;
+            margin: 5px 0;
+            background: rgba(108, 99, 255, 0.05);
+            border-radius: 8px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(-20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .floating-bg {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            animation: float 20s infinite linear;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(100px, 100px) rotate(90deg); }
+            50% { transform: translate(50px, 200px) rotate(180deg); }
+            75% { transform: translate(-100px, 150px) rotate(270deg); }
+        }
+
+        .loading {
+            position: relative;
+            pointer-events: none;
+        }
+
+        .loading::after {
+            content: "";
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 3px solid white;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 0.8s linear infinite;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        @keyframes spin {
+            to { transform: translateY(-50%) rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-bg" style="top:10%; left:20%"></div>
+    <div class="floating-bg" style="top:70%; left:80%"></div>
+    <div class="floating-bg" style="top:40%; left:90%"></div>
+    
+    <div class="container">
+        <h1> LinguaFlow </h1>
+        
+        <div class="input-group">
+            <input type="text" id="textInput" placeholder="Enter text to translate...">
+            <button id="voiceBtn" onclick="startSpeechRecognition()">
+                🎙️ Speak
+                <div class="voice-animation" style="display: none"></div>
+            </button>
+        </div>
+        
+        <div class="select-group">
+            <select id="srcLang"></select>
+            <select id="destLang"></select>
+        </div>
+        
+        <button onclick="translateText()" id="translateBtn">
+            🚀 Translate Now
+        </button>
+        
+        <div id="result" class="result-box"></div>
+
+        <div class="history">
+            <h3>📜 Translation History</h3>
+            <ul id="historyList"></ul>
+        </div>
+    </div>
+
+    <script>
+        const languages = {
+            "en": "🇺🇸 English", "es": "🇪🇸 Spanish", "fr": "🇫🇷 French", "de": "🇩🇪 German",
+            "it": "🇮🇹 Italian", "pt": "🇵🇹 Portuguese", "zh": "🇨🇳 Chinese", "ru": "🇷🇺 Russian",
+            "ar": "🇸🇦 Arabic", "hi": "🇮🇳 Hindi", "bn": "🇮🇳 Bengali", "pa": "🇮🇳 Punjabi",
+            "ml": "🇮🇳 Malayalam", "ta": "🇮🇳 Tamil", "te": "🇮🇳 Telugu", "kn": "🇮🇳 Kannada",
+            "mr": "🇮🇳 Marathi", "gu": "🇮🇳 Gujarati", "ur": "🇮🇳 Urdu", "or": "🇮🇳 Odia",
+            "as": "🇮🇳 Assamese", "kok": "🇮🇳 Konkani", "ne": "🇳🇵 Nepali", "sa": "🇮🇳 Sanskrit",
+            "sd": "🇵🇰 Sindhi", "tr": "🇹🇷 Turkish", "nl": "🇳🇱 Dutch", "sv": "🇸🇪 Swedish",
+            "el": "🇬🇷 Greek", "he": "🇮🇱 Hebrew", "th": "🇹🇭 Thai", "vi": "🇻🇳 Vietnamese",
+            "ko": "🇰🇷 Korean", "ja": "🇯🇵 Japanese", "fa": "🇮🇷 Persian", "pl": "🇵🇱 Polish",
+            "uk": "🇺🇦 Ukrainian", "cs": "🇨🇿 Czech", "hu": "🇭🇺 Hungarian", "ro": "🇷🇴 Romanian",
+            "fi": "🇫🇮 Finnish", "no": "🇳🇴 Norwegian", "da": "🇩🇰 Danish", "bg": "🇧🇬 Bulgarian"
+        };
+
+        function populateLanguages() {
+            const srcLang = document.getElementById('srcLang');
+            const destLang = document.getElementById('destLang');
+            Object.entries(languages).forEach(([code, name]) => {
+                let option = new Option(name, code);
+                srcLang.add(option);
+                destLang.add(option.cloneNode(true));
+            });
+            destLang.value = 'es'; // Default destination language
+        }
+
+        async function translateText() {
+            const text = document.getElementById('textInput').value;
+            const src = document.getElementById('srcLang').value;
+            const dest = document.getElementById('destLang').value;
+            const resultBox = document.getElementById('result');
+            const translateBtn = document.getElementById('translateBtn');
+            
+            if (!text.trim()) return alert('Enter some text!');
+            
+            try {
+                translateBtn.classList.add('loading');
+                const response = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${src}|${dest}`);
+                const data = await response.json();
+                if (data.responseStatus === 200) {
+                    resultBox.innerHTML = `🌐 ${data.responseData.translatedText}`;
+                    saveToHistory(text, data.responseData.translatedText);
+                    resultBox.style.background = 'rgba(108, 99, 255, 0.1)';
+                } else {
+                    throw new Error('Translation failed');
+                }
+            } catch (error) {
+                resultBox.style.background = 'rgba(255, 101, 132, 0.1)';
+                resultBox.textContent = `❌ ${error.message}`;
+            } finally {
+                translateBtn.classList.remove('loading');
+            }
+        }
+
+        function saveToHistory(original, translated) {
+            const historyList = document.getElementById('historyList');
+            const listItem = document.createElement('li');
+            listItem.innerHTML = `
+                <strong>${original}</strong> 
+                <span style="color: var(--primary)">➔</span> 
+                ${translated}
+                <small style="display: block; color: #666; margin-top: 5px">
+                    ${new Date().toLocaleTimeString()}
+                </small>
+            `;
+            historyList.prepend(listItem);
+        }
+
+        function startSpeechRecognition() {
+            const voiceBtn = document.getElementById('voiceBtn');
+            const animation = voiceBtn.querySelector('.voice-animation');
+            
+            if (!('webkitSpeechRecognition' in window)) {
+                alert('Speech recognition not supported in this browser');
+                return;
+            }
+
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = document.getElementById('srcLang').value;
+            recognition.interimResults = true;
+            
+            recognition.onstart = () => {
+                voiceBtn.disabled = true;
+                animation.style.display = 'block';
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                document.getElementById('textInput').value = transcript;
+            };
+
+            recognition.onerror = () => {
+                voiceBtn.disabled = false;
+                animation.style.display = 'none';
+            };
+
+            recognition.onend = () => {
+                voiceBtn.disabled = false;
+                animation.style.display = 'none';
+            };
+
+            recognition.start();
+        }
+
+        window.onload = populateLanguages;
+    </script>
+</body>
+</html>
