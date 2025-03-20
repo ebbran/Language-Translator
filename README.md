@@ -68,6 +68,3 @@ Push to your branch: git push origin feature-name
 
 Open a pull request.
 
-📜 License
-
-This project is open-source and available under the MIT License.
